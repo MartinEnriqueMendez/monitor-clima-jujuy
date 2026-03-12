@@ -18,6 +18,6 @@ def save_measurement(temp: float, hum: int, desc: str, db_name: str = "clima_agr
        cursor = conn.cursor()
        cursor.execute(
            "INSERT INTO mediciones (temperatura, humedad, descripcion) VALUES (?, ?, ?)",
-       (temp, hum, desc)
+            (temp, hum, desc)
        ) 
        conn.commit()
