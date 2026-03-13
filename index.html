@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang = "es">
+    <head>
+        <meta charset="viewport" content = "width = device-width, initial-scale=1.0">
+    <title>Monitor Clima Jujuy</title>
+    <style>
+        body {font-family: sans-serif; background-color: #f4f4f9; }
+        table {margin: 20px auto; border-collapse: collapse; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1);} 
+        th, td{padding: 12px 15px; border: 1px solid #ddd}
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) {background-color: #f2f2f2}
+        .temp {font-weight: bold; color: #d9534f;}
+    </style>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <h1> Monitoreo Climático - San Pedro, Jujuy</h1>
+        <button onclick=""cargarMediciones()">Actualizar Datos</button>
+        <div style="position:relative; height: 40vh; width: 80%; margin:auto;">
+            <canvas id="graficoClima"></canvas>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha y Hora</th>
+                    <th>Temperatura</th>
+                    <th>Humedad</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-body">
+                </tbody>
+        </table>
+        <script>
+            let miGrafico; //variable global para el gráfico
+
+            async function cargarMediciones(){
+                try{
+                    //Fetch API: Pide los datos al FastAPI
+                    const respuesta = await fetch('http://127.0.0.1:8000/mediciones');
+                    const datos = await respuesta.json();
+
+                    //Se invierte el orden para que en el gráfico el tiempo vaya de izq a der
+                    const datosOrdenados = [...datos].reverse();
+                    mostrarTabla(datos);
+                    dibujarGrafico(datosOrdenados);
+                } catch(error) {
+                    console.error("Error:", error);
+                }
+            }
+            function mostrarTabla(datos){
+                const tabla = document.getElementById('tabla-body');
+                tabla.innerHTML = ''; //Limpiar tabla antes de cargar
+                datos.forEach(medicion => {
+                    tabla.innerHTML += `
+                        <tr>
+                            <td>${medicion.fecha}</td>
+                            <td class = "temp">${medicion.temperatura}°C</td>
+                            <td>${medicion.humedad}%</td>
+                            <td>${medicion.descripcion}</td>
+                        </tr>`;
+                });
+            }
+
+            function dibujarGrafico(datos){
+                const ctx = document.getElementById('graficoClima').getContext('2d');
+
+                //si ya existe un gráfico, lo borramos para crear el nuevo
+                if (miGrafico){ miGrafico.destroy(); }
+
+                //const etiquetas = datos.map(m => m.fecha.split(' ')[1]); //solo la hora
+                const etiquetas = datos.map(m => m.fecha); //ver fecha y hora completa
+                const temperaturas = datos.map(m => m.temperatura);
+
+                miGrafico = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: etiquetas,
+                        datasets: [{
+                            label: 'Temperatura en San Pedro (°C)',
+                            data: temperaturas,
+                            borderColor: '#d9534f',
+                            backgroundColor: 'rgba(217, 83, 79, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    }
+                });
+
+            }
+            //Cargar al entrar a la página
+            window.onload = cargarMediciones;
+        </script>
+    </body>
+</html>
