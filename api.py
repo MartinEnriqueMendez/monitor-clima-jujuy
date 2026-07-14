@@ -5,12 +5,15 @@ from datetime import date
 from pydantic import BaseModel
 import redis
 import json
-
+import os
 
 app = FastAPI(title="Monitor climático Agro - Jujuy")
 
-#2. Conectamos con el cliente de redis que está corriendo en Docker
-r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+#Conectamos con el cliente de redis que está corriendo en Docker
+#r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+redis_host = os.getenv("REDIS_HOST", "localhost")
+r = redis.Redis(host=redis_host, port=6379, decode_responses=True)
+
 
 class MedicionSensor(BaseModel):
     sensor_id: str

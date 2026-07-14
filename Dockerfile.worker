@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+#El worker necesita el script como la base de datos para persistir
+COPY worker.py .
+COPY clima_agro.db .
+
+#El worker no expone puertos porque solo consume de Redis y escribe en SQLite
+CMD ["python", "worker.py"]

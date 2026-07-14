@@ -1,0 +1,31 @@
+services:
+  #Servicio 1: el Buffer de memoria
+  redis-service:
+    image: redis:7-alpine
+    container_name: redis-agro-compose
+    ports:
+      - "6379:6379"
+
+  #Servicio 2: La API de FastAPI
+  api-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: api-agro-compose
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis-service #No arranca hasta que Redis esté listo
+    environment:
+      - REDIS_HOST=redis-service #Le pasamos el nombre del servicio como variable
+
+  #Servicio 3: El worker de streaming
+  worker-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: worker-agro-compose
+    depends_on:
+      - redis-service
+    environment:
+      - REDIS_HOST=redis-service
